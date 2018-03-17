@@ -1,0 +1,12 @@
+build/
+xcuserdata/
+*.xccheckout
+*.xcscmblueprint
+*.xctimeline
+*.mode2v3
+*.pbxuser
+*.zip
+(*)/
+.DS_Store
+Carthage/
+Pods/

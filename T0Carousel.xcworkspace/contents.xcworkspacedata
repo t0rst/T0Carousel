@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "container:T0Carousel.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Carthage/Checkouts/CwlUtils/CwlUtils.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Carthage/Checkouts/T0Utils/T0Utils.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:Carthage/Checkouts/BrandKit/BrandKit.xcodeproj">
+   </FileRef>
+</Workspace>

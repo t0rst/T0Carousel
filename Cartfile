@@ -1,0 +1,4 @@
+github "mattgallagher/CwlUtils" "master"
+github "t0rst/T0Utils" "master"
+# only needed for test app
+github "t0rst/BrandKit" "master"
