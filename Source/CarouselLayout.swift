@@ -49,7 +49,7 @@ class Log : T0Logging {}
 
 	Parameters allow control of the number of spread cards at any time, the size of the pack
 	relative to the size of the face card and hence the sizes and offsets of intermediate cards in
-	the spread. The cards are spread along a locus, wherein the top left corner lies on a Bézier
+	the spread. The cards are spread along a locus, wherein the centre of each card lies on a Bézier
 	curve. You can specify the control points of the bezier curve, so affecting the offset sequence
 	for the spread. The default is that the Bézier has evenly spaced control points and hence
 	behaves in a linear fashion. The position of the top card and the pack can also be specified in
@@ -487,15 +487,15 @@ extension CarouselLayout
 			// in the last quarter of its travel
 			attributes.alpha = max(0, 1 - abs(partial * 4))
 		}
-		var infoOverlayAlpha: CGFloat = 0 // we show info overlays for the top card
+		var overlayAlpha: CGFloat = 0 // we show info overlays for the top card
 		if ordinal == itemCount - 1 {
-			infoOverlayAlpha = attributes.alpha
+			overlayAlpha = attributes.alpha
 		} else if position < CGFloat(wp.spreadCount) {
-			infoOverlayAlpha = max(0, 1 - position)
+			overlayAlpha = max(0, 1 - position)
 		}
-		attributes.infoOverlayAlpha = infoOverlayAlpha
+		attributes.overlayAlpha = overlayAlpha
 		// We avoid hide/show at the same time as alpha-->0/1 because it can cause animation glitches
-		attributes.infoOverlayHidden = ordinal > 1 && ordinal < itemCount - 1
+		attributes.overlayHidden = ordinal > 1 && ordinal < itemCount - 1
 		attributes.shadow = ordinal <= wp.spreadCount
 
 		return attributes
@@ -507,7 +507,7 @@ extension CarouselLayout
 
 		var frame = wp.faceRect
 
-	  if params.singleBezierLocus {
+	  if params.singleBezierLocus { // Old:
 		// Card parametic positioning(t): The face card sits at t=zero, the pack is at
 		// t=1, and the card returning from the face to the bottom of the pack traverses from
 		// t=4 (=same as zero, wrapped around) down to t=1.
@@ -538,7 +538,7 @@ extension CarouselLayout
 		} else {
 			frame = wp.packRect
 		}
-	  } else {
+	  } else { // New:
 		if ordinal == itemCount - 1 {
 			// partial==0 ==> at pack (t=1), partial==1 ==> at face (t=4)
 		//	let t = 1.0 + 3.0 * partial
@@ -586,8 +586,8 @@ extension CarouselLayout
 /*
 	CarouselCellLayoutAttributes adds extra properties for cells organised by a CarouselLayout. It
 	is up to the actual cell class whether these are used.
-	- infoOverlays: as the cells are stacked and obscure ones behind, only the edge of the background
-	of an obscured cell will be visible; therefore, the infoOverlayAlpha and infoOverlayHidden
+	- overlays: as the cells are stacked and obscure ones behind, only the edge of the background
+	of an obscured cell will be visible; therefore, the overlayAlpha and overlayHidden
 	attributes allow any overlayed information to be faded out and hidden when it will not be
 	usably visible
 	- shadow: as shadow is usually partially transparent when used, use this property to switch off
@@ -595,15 +595,15 @@ extension CarouselLayout
 */
 open class CarouselCellLayoutAttributes : UICollectionViewLayoutAttributes
 {
-	public var infoOverlayAlpha:	CGFloat = 0.0
-	public var infoOverlayHidden:	Bool = true
+	public var overlayAlpha:	CGFloat = 0.0
+	public var overlayHidden:	Bool = true
 	public var shadow:				Bool = false
 
 	open override func copy(with zone: NSZone? = nil) -> Any {
 		let copy = super.copy(with: zone)
 		if let attr = copy as? CarouselCellLayoutAttributes {
-			attr.infoOverlayAlpha = infoOverlayAlpha
-			attr.infoOverlayHidden = infoOverlayHidden
+			attr.overlayAlpha = overlayAlpha
+			attr.overlayHidden = overlayHidden
 			attr.shadow = shadow
 		}
 		return copy
@@ -612,8 +612,8 @@ open class CarouselCellLayoutAttributes : UICollectionViewLayoutAttributes
 	open override func isEqual(_ object: Any?) -> Bool {
 		if	super.isEqual(object),
 			let attr = object as? CarouselCellLayoutAttributes,
-			attr.infoOverlayAlpha == infoOverlayAlpha,
-			attr.infoOverlayHidden == infoOverlayHidden,
+			attr.overlayAlpha == overlayAlpha,
+			attr.overlayHidden == overlayHidden,
 			attr.shadow == shadow
 		{
 			return true

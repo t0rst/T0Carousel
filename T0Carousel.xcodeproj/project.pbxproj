@@ -92,7 +92,7 @@
 		AEA5ED71205D16850059DC3F /* T0Utils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = T0Utils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEA5ED73205D16970059DC3F /* CwlUtils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = CwlUtils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEA5ED75205D169D0059DC3F /* T0Utils.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = T0Utils.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		AEA5ED7A205D18740059DC3F /* TestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TestApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AEA5ED7A205D18740059DC3F /* T0Carousel-TestApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "T0Carousel-TestApp.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AEA5ED7C205D18740059DC3F /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		AEA5ED7E205D18740059DC3F /* CarouselTestVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CarouselTestVC.swift; sourceTree = "<group>"; };
 		AEA5ED81205D18740059DC3F /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
@@ -174,7 +174,7 @@
 				AE1F2C4C2048232000E31E22 /* T0Carousel-iOSTests.xctest */,
 				AE1F2C602048233A00E31E22 /* T0Carousel.framework */,
 				AE1F2C682048233A00E31E22 /* T0Carousel-macOSTests.xctest */,
-				AEA5ED7A205D18740059DC3F /* TestApp.app */,
+				AEA5ED7A205D18740059DC3F /* T0Carousel-TestApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -343,9 +343,9 @@
 			productReference = AE1F2C682048233A00E31E22 /* T0Carousel-macOSTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		AEA5ED79205D18740059DC3F /* TestApp */ = {
+		AEA5ED79205D18740059DC3F /* T0Carousel-TestApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = AEA5ED89205D18740059DC3F /* Build configuration list for PBXNativeTarget "TestApp" */;
+			buildConfigurationList = AEA5ED89205D18740059DC3F /* Build configuration list for PBXNativeTarget "T0Carousel-TestApp" */;
 			buildPhases = (
 				AEA5ED76205D18740059DC3F /* Sources */,
 				AEA5ED77205D18740059DC3F /* Frameworks */,
@@ -357,9 +357,9 @@
 			dependencies = (
 				AEA5ED9B205D1C410059DC3F /* PBXTargetDependency */,
 			);
-			name = TestApp;
+			name = "T0Carousel-TestApp";
 			productName = TestApp;
-			productReference = AEA5ED7A205D18740059DC3F /* TestApp.app */;
+			productReference = AEA5ED7A205D18740059DC3F /* T0Carousel-TestApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -413,7 +413,7 @@
 				AE1F2C4B2048232000E31E22 /* T0Carousel-iOSTests */,
 				AE1F2C5F2048233A00E31E22 /* T0Carousel-macOS */,
 				AE1F2C672048233A00E31E22 /* T0Carousel-macOSTests */,
-				AEA5ED79205D18740059DC3F /* TestApp */,
+				AEA5ED79205D18740059DC3F /* T0Carousel-TestApp */,
 			);
 		};
 /* End PBXProject section */
@@ -911,7 +911,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		AEA5ED89205D18740059DC3F /* Build configuration list for PBXNativeTarget "TestApp" */ = {
+		AEA5ED89205D18740059DC3F /* Build configuration list for PBXNativeTarget "T0Carousel-TestApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AEA5ED8A205D18740059DC3F /* Debug */,
