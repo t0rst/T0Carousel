@@ -39,6 +39,74 @@ class T0CarouselTestCase : XCTestCase {
 	override func setUp()			{ super.setUp() /**/ }
 	override func tearDown()		{ /**/ super.tearDown() }
 
-	func test01() {
+	func test01_CarouselLayout_Progression_value() {
+		let a = CGFloat(1e-10)
+
+		let p1c = CarouselLayout.Progression([0.0, 1.0], .continuous)
+		// progression repeats 0 --> 1 --> 0
+		XCTAssertEqual(p1c.value(at: 0.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1c.value(at: 0.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1c.value(at: 1.0), CGFloat(1.0), accuracy: a)
+		XCTAssertEqual(p1c.value(at: 1.1), CGFloat(0.9), accuracy: a)
+		XCTAssertEqual(p1c.value(at: 1.9), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1c.value(at: 2.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1c.value(at: 2.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1c.value(at: -0.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1c.value(at: -1.0), CGFloat(1.0), accuracy: a)
+		XCTAssertEqual(p1c.value(at: -1.1), CGFloat(0.9), accuracy: a)
+		XCTAssertEqual(p1c.value(at: -1.9), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1c.value(at: -2.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1c.value(at: -2.1), CGFloat(0.1), accuracy: a)
+
+		let p1d = CarouselLayout.Progression([0.0, 1.0], .discrete)
+		// progression repeats [0,1)
+		XCTAssertEqual(p1d.value(at: 0.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 0.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 0.99999), CGFloat(0.99999), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 1.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 1.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 1.9), CGFloat(0.9), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 2.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 2.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1d.value(at: 3.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1d.value(at: -0.1), CGFloat(0.9), accuracy: a)
+		XCTAssertEqual(p1d.value(at: -1.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1d.value(at: -1.1), CGFloat(0.9), accuracy: a)
+		XCTAssertEqual(p1d.value(at: -1.9), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p1d.value(at: -2.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p1d.value(at: -2.1), CGFloat(0.9), accuracy: a)
+
+		let p2c = CarouselLayout.Progression([0.0, 1.0, 2.0], .continuous)
+		// progression repeats 0 --> 1 --> 2 --> 0
+		XCTAssertEqual(p2c.value(at: 0.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p2c.value(at: 0.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p2c.value(at: 1.0), CGFloat(1.0), accuracy: a)
+		XCTAssertEqual(p2c.value(at: 1.1), CGFloat(1.1), accuracy: a)
+		XCTAssertEqual(p2c.value(at: 1.9), CGFloat(1.9), accuracy: a)
+		XCTAssertEqual(p2c.value(at: 2.0), CGFloat(2.0), accuracy: a)
+		XCTAssertEqual(p2c.value(at: 2.1), CGFloat(1.8), accuracy: a) // 0.1 along return path
+		XCTAssertEqual(p2c.value(at: -0.1), CGFloat(0.2), accuracy: a)
+		XCTAssertEqual(p2c.value(at: -1.0), CGFloat(2.0), accuracy: a)
+		XCTAssertEqual(p2c.value(at: -1.1), CGFloat(1.9), accuracy: a)
+		XCTAssertEqual(p2c.value(at: -1.9), CGFloat(1.1), accuracy: a)
+		XCTAssertEqual(p2c.value(at: -2.0), CGFloat(1.0), accuracy: a)
+		XCTAssertEqual(p2c.value(at: -2.1), CGFloat(0.9), accuracy: a)
+
+		let p2d = CarouselLayout.Progression([0.0, 1.0, 2.0], .discrete)
+		// progression repeats [0,2)
+		XCTAssertEqual(p2d.value(at: 0.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 0.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 1.0), CGFloat(1.0), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 1.1), CGFloat(1.1), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 1.9), CGFloat(1.9), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 1.99999), CGFloat(1.99999), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 2.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p2d.value(at: 2.1), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p2d.value(at: -0.1), CGFloat(1.9), accuracy: a)
+		XCTAssertEqual(p2d.value(at: -1.0), CGFloat(1.0), accuracy: a)
+		XCTAssertEqual(p2d.value(at: -1.1), CGFloat(0.9), accuracy: a)
+		XCTAssertEqual(p2d.value(at: -1.9), CGFloat(0.1), accuracy: a)
+		XCTAssertEqual(p2d.value(at: -2.0), CGFloat(0.0), accuracy: a)
+		XCTAssertEqual(p2d.value(at: -2.1), CGFloat(1.9), accuracy: a)
 	}
 }

@@ -44,14 +44,40 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 		let fm = FileManager.default
 		let docsAt = fm.urls(for: .documentDirectory, in: .userDomainMask)[0]
+		let appearanceAt = docsAt.appendingPathComponent("appearance")
 		if 	let src = Bundle.main.url(forResource: "appearance", withExtension: "json") {
 			AppDelegate.brandAt = src.deletingLastPathComponent()
 			do {
-				let dst = docsAt.appendingPathComponent("appearance.json")
+			#if IOS_SIMULATOR
+				let appearanceSrcPath = ProcessInfo.processInfo.environment["APPEARANCE_SRC"] ?? ""
+				let link = fm.fileExists(atPath: appearanceSrcPath)
+				var linked = false
+				var unlink = false
+				let appearanceDirAttr = (try? fm.attributesOfItem(atPath: appearanceAt.path)) ?? [:]
+				let appearanceDirType = (appearanceDirAttr[.type] as? FileAttributeType) ?? .typeUnknown
+				if appearanceDirType == .typeSymbolicLink {
+					let appearanceDstPath = try? fm.destinationOfSymbolicLink(atPath: appearanceAt.path)
+					linked = appearanceSrcPath == appearanceDstPath
+					unlink = !link
+				}
+				if link != linked || unlink {
+					try? fm.removeItem(at: appearanceAt)
+				}
+				if link {
+					if !linked {
+						try fm.createSymbolicLink(atPath: appearanceAt.path, withDestinationPath: appearanceSrcPath)
+					}
+				} else {
+					try fm.createDirectory(atPath: appearanceAt.path, withIntermediateDirectories: true)
+				}
+			#else
+				try fm.createDirectory(atPath: appearanceAt.path, withIntermediateDirectories: true)
+			#endif
+				let dst = appearanceAt.appendingPathComponent("appearance.json")
 				if !fm.fileExists(atPath: dst.path) {
 					try fm.copyItem(at: src, to: dst)
 				}
-				AppDelegate.brandAt = docsAt
+				AppDelegate.brandAt = appearanceAt
 			} catch {
 				T0Logging.error("copying appearance got \(error)")
 			}

@@ -16,19 +16,22 @@
 	},
 	"otherParameters" : {
 		"carousel_params":{
-			"spreadCount":6,
+			"spreadCount":7,
 			"packScale":0.7,
-			"packPosition":[0.90,0.15],
-			"facePosition":[0.15,1],
-			"xfacePosition":[0.05,0.5],
-			"xfaceSize":[500,500],
+			"x_packPosition":[1.0,0.0],
+			"x_facePosition":[0.0,1.0],
+			"packPosition":[0.90,0.2],
+			"facePosition":[0.15,0.8],
 			"faceSize":[200,200],
-			"locusControlPoints":[0.3,0.8],
+			"locusControlPoints":[0.0,0.8],
+			"returnOvershoot":2.0,
 			"showLocus":"yes",
 		},
 		"gesture_handling":{
 			"animateSelection":"yes",
-			"x_selectDuration":3,
+			"animateAlpha":"yes",
+			"verbose":"yes",
+			"selectDuration":3,
 			"bypassApply":"yes"
 		}
 	}

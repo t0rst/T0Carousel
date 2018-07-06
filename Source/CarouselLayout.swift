@@ -45,7 +45,8 @@ class Log : T0Logging {}
 	in the pack, e.g. the top or face card is completely visible, the second card is behind and
 	offset from the face card, likewise the third is offset and behind the second, etc. and this
 	repeats for a number of cards until the pack is reached, i.e. the remainder of the cards in one
-	pile with so that only the top one is seen.
+	pile with only the top one seen. When there is no spread, the top of the pack is the face card
+	and is the only card visible.
 
 	Parameters allow control of the number of spread cards at any time, the size of the pack
 	relative to the size of the face card and hence the sizes and offsets of intermediate cards in
@@ -77,18 +78,29 @@ public class CarouselLayout : UICollectionViewLayout
 		// for debugging:
 		public var showLocus:			Bool = false
 
-		public var singleBezierLocus:		Bool = false // temp
-
 		public init(){}
 	}
 	// MARK:-
 	public struct Progression
 	{
 		public let values:				[CGFloat]
-		public init() { values = [] }
-		public init(_ v: [CGFloat]) { values = v }
+		public let loopback:			Loopback
+		/// Loopback describes behaviour when looping back from last value to first value
+		public enum Loopback {
+			/// `continuous` means there is a step between last and first. When passing last, the progression returns to first via interpolated intermediate values.
+			case continuous
+			/// `discrete` means that there is no step between first and last. When reaching last, the progression immediately returns to first with no intervening value.
+			case discrete
+			func normalise(position: CGFloat, within count: Int) -> CGFloat {
+				let steps = CGFloat(self == .continuous ? count : count - 1)
+				let normalised = rotate(position, by: 0, within: steps)
+				return normalised
+			}
+		}
+		public init() { values = [] ; loopback = .continuous }
+		public init(_ v: [CGFloat], _ l: Loopback = .continuous) { values = v ; loopback = l }
 		public func value(at position: CGFloat) -> CGFloat {
-			let posn = rotate(position, by: CGFloat(values.count), within: CGFloat(values.count))
+			let posn = loopback.normalise(position: position, within: values.count)
 			let n = Int(trunc(posn)), m = (n + 1) % values.count
 			let t1 = posn - CGFloat(n)
 			let t0 = 1 - t1
@@ -98,7 +110,7 @@ public class CarouselLayout : UICollectionViewLayout
 			return v
 		}
 		public func values(from position: CGFloat, forwards: Bool) -> [CGFloat] {
-			let posn = rotate(position, by: CGFloat(values.count), within: CGFloat(values.count))
+			let posn = loopback.normalise(position: position, within: values.count)
 			var n = Int(trunc(posn))
 			var t = posn - CGFloat(n)
 			if fabs(1 - t) < 1e-10 {
@@ -117,8 +129,10 @@ public class CarouselLayout : UICollectionViewLayout
 			return v
 		}
 	}
+	/// Locus describes a single closed path using sequence of Bézier curves
 	public struct Locus
 	{
+		/// Must contain 3n + 1 Bézier control points, and the last point must replicate the first.
 		public var points:				[CGPoint]
 		public init(count: Int = 0)	{ points = [CGPoint](repeating: .zero, count: count) }
 		public enum ControlPoint : Int	{ case A = 0, B, C, D }
@@ -148,31 +162,48 @@ public class CarouselLayout : UICollectionViewLayout
 			return b - a
 		}
 		public var asCGPath: CGPath {
-			return path(from: 0, forwards: true)
-		}
-		public func path(from t: Int, forwards: Bool) -> CGPath {
 			let path = CGMutablePath()
-			let n = Locus.index(t: t)
-			guard n < points.count
+			guard points.count > 3
 			else { return path }
-			var i = points.startIndex.advanced(by: n)
+			var i = points.startIndex
 			path.move(to: points[i])
-			let increment = forwards ? 1 : -1
 			var remaining = points.count / 3
 			while remaining > 0 {
-				if	i == (forwards ? points.endIndex.advanced(by: -1) : points.startIndex) {
-					i = (forwards ? points.startIndex : points.endIndex.advanced(by: -1))
-				}
-			//	let a = points[i]
-				let b = points[ i.advanced(by: increment * 1) ]
-				let c = points[ i.advanced(by: increment * 2) ]
-				let d = points[ i.advanced(by: increment * 3) ]
+				let b = points[ i.advanced(by: 1) ]
+				let c = points[ i.advanced(by: 2) ]
+				let d = points[ i.advanced(by: 3) ]
 				path.addCurve(to: d, control1: b, control2: c)
-				i = i.advanced(by: increment * 3)
+				i = i.advanced(by: 3)
 				remaining -= 1
 			}
 			path.closeSubpath()
 			return path
+		}
+		public func path(from t: Int, forwards: Bool) -> CGPath {
+			return self.rotated(startingAt: t, forwards: forwards).asCGPath
+		}
+		public func rotated(startingAt t: Int, forwards: Bool = true) -> Locus {
+			var locus = Locus()
+			let n = Locus.index(t: t)
+			guard t >= 0, n < points.count, points.count % 3 == 1
+			else { return locus }
+			var i = points.startIndex.advanced(by: n)
+			locus.points.append(points[i])
+			let increment = forwards ? 1 : -1
+			let wrapAt = forwards ? points.endIndex.advanced(by: -1) : points.startIndex
+			let wrapTo = forwards ? points.startIndex : points.endIndex.advanced(by: -1)
+			var remaining = points.count / 3
+			while remaining > 0 {
+				if i == wrapAt {
+					i = wrapTo
+				}
+				locus.points.append(points[ i.advanced(by: increment * 1) ])
+				locus.points.append(points[ i.advanced(by: increment * 2) ])
+				locus.points.append(points[ i.advanced(by: increment * 3) ])
+				i = i.advanced(by: increment * 3)
+				remaining -= 1
+			}
+			return locus
 		}
 	}
 	// MARK:-
@@ -275,6 +306,7 @@ extension CarouselLayout
 		else { return wp }
 
 		let spreadCount = max(0, min(params.spreadCount, itemCount - 1))
+		let visibleCount = spreadCount + 1
 		let availableSize = availableArea
 		let faceWidth	= faceCardSize.width > 0
 						? min(faceCardSize.width, availableSize.width)
@@ -321,29 +353,6 @@ extension CarouselLayout
 		alpha.append(contentsOf: [CGFloat](repeating: 0, count: itemCount - alpha.count) )
 		wp.alphaProgression = Progression(alpha)
 
-	  if params.singleBezierLocus { // Old:
-		// We want a locus that is four Béziers forming a closed loop. The face card is at
-		// parametic position zero, the pack is at position 1, and the card return from the face to
-		// the bottom of the pack traverses from parametric position 4 (=0) down to 1.
-		// First fill locus point array with empties
-		let pointCount = Locus.index(t: 3, cp: .D) + 1
-		wp.locus = Locus(count: pointCount)
-		// Copy the first Bézier from the params
-		let points = stride(from: 0, to: params.locusControlPoints.count, by: 2).map {
-			CGPoint(x: params.locusControlPoints[$0], y: params.locusControlPoints[$0+1])
-		}
-		wp.locus.points.replaceSubrange( Locus.index(t: 0, cp: .A) ... Locus.index(t: 0, cp: .D) , with: points)
-		// Repeat first Bézier start at end of last Bézier
-		wp.locus[3, .D] = wp.locus[0, .A]
-		// The vectors adjoining the first Bézier are mirrors of those inside it
-		wp.locus[3, .C] = wp.locus[3, .D] - wp.locus.vector(.leaving, 0, .A)
-		wp.locus[1, .B] = wp.locus[1, .A] + wp.locus.vector(.entering, 0, .D)
-		// The remaining control points are the same as the ones we have just set up, but rotated
-		// 180° around the centre of the available area, which we do after we have scaled the points.
-		wp.locus[1, .C] = wp.locus[3, .C]
-		wp.locus.points[ Locus.index(t: 2, cp: .A) ... Locus.index(t: 3, cp: .B) ]
-			= wp.locus.points[ Locus.index(t: 0, cp: .A) ... Locus.index(t: 1, cp: .B) ]
-	  } else { // New:
 		// We subdivide the locus by the number of items in the spread, and add a single bezier
 		// for the return, then add a bezier for each item in the pack. This means that the
 		// traversal between adjacent positions is exactly one bezier, wherever the item is.
@@ -352,15 +361,15 @@ extension CarouselLayout
 			CGPoint(x: params.locusControlPoints[$0], y: params.locusControlPoints[$0+1])
 		}
 		divide(bezier: locusBezier.dropFirst(0), by: spreadCount, into: &points)
-		// remember that t=0 is the face, locusControlPoints extends from face to pack, and
-		// adding the subdivided locusControlPoints means that we are now at the pack and
-		// t=spreadCount. We need to add trivial beziers for the remaining items in the pack
-		// before we add the return path.
+		// remember that t=0 is the face, locusControlPoints extends from face to pack, and adding
+		// the subdivided locusControlPoints means that we are now at the pack and t=spreadCount.
+		// We need to add trivial beziers for the remaining items hidden in the pack before we add
+		// the return path.
 		let endPoint = points[points.endIndex.advanced(by: -1)]
 		let startPoint = points[points.startIndex]
-		if itemCount - spreadCount > 1 {
-			let remainingInPack = itemCount - spreadCount - 1
-			let staticBeziers: [CGPoint] = .init(repeating: endPoint, count: remainingInPack * 3)
+		let hiddenCount = itemCount - visibleCount
+		if hiddenCount > 0 {
+			let staticBeziers: [CGPoint] = .init(repeating: endPoint, count: hiddenCount * 3)
 			points.append(contentsOf: staticBeziers)
 		}
 		// now the return path
@@ -370,28 +379,13 @@ extension CarouselLayout
 		points.append(contentsOf: [b, c, d])
 		wp.locus = Locus(count: 0)
 		wp.locus.points = points
-	  }
 
 		// Now scale the locus to run from faceRect anchor to packRect anchor
 		var transform = CGAffineTransform.identity
-	//	let scaleTo = packRect.origin - faceRect.origin
-	//	transform = transform.translatedBy(x: faceRect.origin.x, y: faceRect.origin.y)
 		let scaleTo = packRect.center - faceRect.center
 		transform = transform.translatedBy(x: faceRect.center.x, y: faceRect.center.y)
 		transform = transform.scaledBy(x: scaleTo.x, y: scaleTo.y)
 		wp.locus.points = wp.locus.points.map { $0.applying(transform) }
-
-	  if params.singleBezierLocus && spreadCount > 0 { // Old:
-		// Finally, as mentioned earlier, now that the points are scaled, rotate the return loop
-		// around the centre of the available area
-		transform = CGAffineTransform.identity
-		transform = transform.translatedBy(x: +availableSize.width/2, y: +availableSize.height/2)
-		transform = transform.rotated(by: .pi)
-		transform = transform.translatedBy(x: -availableSize.width/2, y: -availableSize.height/2)
-		let i = wp.locus.points.startIndex.advanced(by: Locus.index(t: 1, cp: .C))
-		let j = wp.locus.points.startIndex.advanced(by: Locus.index(t: 3, cp: .B))
-		wp.locus.points.replaceSubrange( i...j, with: wp.locus.points[ i...j ].map({ $0.applying(transform) }))
-	  }
 
 		// done
 		return wp
@@ -507,38 +501,6 @@ extension CarouselLayout
 
 		var frame = wp.faceRect
 
-	  if params.singleBezierLocus { // Old:
-		// Card parametic positioning(t): The face card sits at t=zero, the pack is at
-		// t=1, and the card returning from the face to the bottom of the pack traverses from
-		// t=4 (=same as zero, wrapped around) down to t=1.
-		if ordinal == itemCount - 1 {
-			// partial==0 ==> at pack (t=1), partial==1 ==> at face (t=4)
-			let t = 1.0 + 3.0 * partial
-			// We increase the card size when it comes off the top (partial= 1..0.75), but then set
-			// it to pack size when it is rejoining the pack
-			if partial < 0.5 {
-				// for partial: 0..<0.5
-				frame.size = wp.packRect.size
-			//	frame.origin = pointAt(t: t, onBezierPath: wp.locus.points.dropFirst(0)) ?? .zero
-				frame.center = pointAt(t: t, onBezierPath: wp.locus.points.dropFirst(0)) ?? .zero
-			} else {
-				// for partial: 0.5...1.0
-				// continue with same scaling when leaving the top
-				let mix = (1 - partial) * 2 // 1->0  <-- (partial: 0.5->1)
-				//		/ (CGFloat(wp.spreadCount) + 1)
-				frame.size = wp.packRect.size * mix + frame.size * (1.0 - mix)
-			//	frame.origin = pointAt(t: t, onBezierPath: wp.locus.points.dropFirst(0)) ?? .zero
-				frame.center = pointAt(t: t, onBezierPath: wp.locus.points.dropFirst(0)) ?? .zero
-			}
-		} else if position < CGFloat(wp.spreadCount) && wp.spreadCount > 0 {
-			let mix = position / CGFloat(wp.spreadCount)
-			frame.size = wp.packRect.size * mix + frame.size * (1.0 - mix)
-		//	frame.origin = pointAt(t: mix, onBezierPath: wp.locus.points.dropFirst(0)) ?? .zero
-			frame.center = pointAt(t: mix, onBezierPath: wp.locus.points.dropFirst(0)) ?? .zero
-		} else {
-			frame = wp.packRect
-		}
-	  } else { // New:
 		if ordinal == itemCount - 1 {
 			// partial==0 ==> at pack (t=1), partial==1 ==> at face (t=4)
 		//	let t = 1.0 + 3.0 * partial
@@ -566,7 +528,6 @@ extension CarouselLayout
 		} else {
 			frame = wp.packRect
 		}
-	  }
 
 		frame = frame.integralOnScreen()
 
@@ -629,11 +590,15 @@ extension CarouselLayout
 {
 	public struct GestureHandling {
 		public var animateSelection:		Bool = false
-		public var bypassApply:			Bool = false
-		public var verbose:				Bool = false
+		public var animateBounds:			Bool = false
+		public var animateAlpha:			Bool = false
+		public var bypassApply:				Bool = false
+		public var verbose:					Bool = false
 		public var selectDuration:			TimeInterval = 2.0
 		public init() {
 			animateSelection = false
+			animateBounds = false
+			animateAlpha = false
 			bypassApply = false
 			verbose = false
 			selectDuration = 2.0
@@ -641,6 +606,8 @@ extension CarouselLayout
 		public init?(_ jso: AnyJSONObject) {
 			guard case .dictionary(let d) = jso else { return nil }
 			animateSelection = d["animateSelection"]?.asBool ?? false
+			animateBounds = d["animateBounds"]?.asBool ?? false
+			animateAlpha = d["animateAlpha"]?.asBool ?? false
 			bypassApply = d["bypassApply"]?.asBool ?? false
 			verbose = d["verbose"]?.asBool ?? false
 			selectDuration = d["selectDuration"]?.asDouble ?? 2.0
@@ -649,7 +616,7 @@ extension CarouselLayout
 
 	public struct GestureParams {
 		public var animator:				UIViewPropertyAnimator? = nil
-		public var selecteeIndexAt:		(animationStart: Int, animationEnd: Int) = (0,0)
+		public var selecteeIndexAt:			(animationStart: Int, animationEnd: Int) = (0,0)
 	}
 
 	enum Gesture { case tap, pan_start, pan_release(speed: CGFloat) }
@@ -785,7 +752,18 @@ extension CarouselLayout
 	func makeAnimationBlockForRepositioning(by delta: CGFloat) -> ()->Void {
 		return {
 			let wp = self.wp
-			let kfaDuration = self.gh.selectDuration * Double(self.itemCount - 1) / fabs(Double(delta))
+			/*	What this does and how:
+				-	we want to move each cell by amount delta
+				-	we setup key frame animations that would move each cell's properties full circle
+					-	i.e. completely around the positioning loop returning to the start position
+				-	in order to subsample the key frame transitions, we put them inside a group animation with a shorter duration
+					-	the group animation duration is set to the overall duration we want
+					-	the keyframe animation durations are chosen such that group / kfa duration is the fraction of the animation that we want to show, i.e. delta / full circle
+				-	when provide the position key frame animation with a bezier path to follow
+					-	this is rotated from the original path, such that the starting point we need is at the begining
+					-	it may seem that this rotation could have been achieved using the original path and setting a start time offset for the KFA, however this would not cope with the wrap around that is needed for at least one of the cells each time; the path rotation functions we use instead can cope with wrap around
+			*/
+			let kfaDuration = self.gh.selectDuration * Double(self.itemCount + 1) / fabs(Double(delta))
 			let groupDuration = self.gh.selectDuration
 			let transitionalOffsetWas = self.transitionalOffset //+ 0.2
 			self.transitionalOffset = transitionalOffsetWas - delta //+ 0.5
@@ -793,40 +771,55 @@ extension CarouselLayout
 			{ (cell, indexPath, ordinal) in
 				guard let attributes = self.layoutAttributesForItem(at: indexPath)
 				else { return }
+				let verboseForThisCell = self.gh.verbose && (indexPath.item == self.gp.selecteeIndexAt.animationStart || indexPath.item == self.gp.selecteeIndexAt.animationEnd)
 				if self.gh.bypassApply {
 					// try just frame for now
-				//	cell.frame = attributes.frame
-					cell.bounds = CGRect(attributes.frame.size)
+					let frame = attributes.frame
+					cell.bounds = CGRect(frame.size)
+					cell.center = frame.center
 
-					cell.center = attributes.frame.center
-					let kf_pos = CAKeyframeAnimation(keyPath: "position")
-					kf_pos.path = wp.locus.path(from: ordinal, forwards: delta < 0)
-					kf_pos.duration = kfaDuration
-					let kf_bounds = CAKeyframeAnimation(keyPath: "bounds.size")
-					let scales = wp.scaleProgression.values(from: CGFloat(ordinal), forwards: delta < 0)
-					let values = scales.map { wp.faceRect.size * $0 }
-					kf_bounds.values = values
-					kf_bounds.duration = kfaDuration
-					let kf_alpha = CAKeyframeAnimation(keyPath: "opacity")
-					kf_alpha.values = wp.scaleProgression.values(from: CGFloat(ordinal), forwards: delta < 0)
-					kf_alpha.duration = kfaDuration
+					var animations: [CAAnimation] = []
+
+					var kfa = CAKeyframeAnimation(keyPath: "position")
+					kfa.path = wp.locus.path(from: ordinal, forwards: delta < 0)
+					kfa.duration = kfaDuration
+					animations.append(kfa)
+
+					if self.gh.animateBounds {
+						kfa = CAKeyframeAnimation(keyPath: "bounds.size")
+						let scales = wp.scaleProgression.values(from: CGFloat(ordinal), forwards: delta < 0)
+						let values = scales.map { wp.faceRect.size * $0 }
+						kfa.values = values
+						kfa.duration = kfaDuration
+						animations.append(kfa)
+					}
+
+					if self.gh.animateAlpha {
+						kfa = CAKeyframeAnimation(keyPath: "opacity")
+						kfa.values = wp.alphaProgression.values(from: CGFloat(ordinal), forwards: delta < 0)
+						kfa.duration = kfaDuration
+						animations.append(kfa)
+					}
+
 					let ga = CAAnimationGroup()
-					ga.animations = [kf_pos, kf_bounds, kf_alpha]
+					ga.animations = animations
 					ga.duration = groupDuration
 					ga.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
 					cell.layer.removeAnimation(forKey: "position")
-					cell.layer.removeAnimation(forKey: "bounds.size")
+					if self.gh.animateBounds {
+						cell.layer.removeAnimation(forKey: "bounds.size")
+					}
 					cell.layer.add(ga, forKey: "position")
 				} else {
 					cell.apply(attributes)
 				}
-				if self.gh.verbose {
+				if verboseForThisCell, ordinal == -1 {
 					cell.layer.animationKeys()?.forEach { (k) in
 						var s = "nil"
 						if let a = cell.layer.animation(forKey: k) {
 							s = a.debugDescription
 						}
-						print("cell[\(ordinal)].layer.animation[\"\(k)\"]=\(s)")
+						print("cell[\(indexPath.item)].layer.animation[\"\(k)\"]=\(s)")
 					}
 				}
 			}
@@ -915,7 +908,7 @@ public extension CarouselLayout.Params
 			guard
 				case .array(let values) = obj,
 				values.count == 0 || values.count == 2 || values.count == 4,
-				values.count == values.flatMap(gatherDoubles).count
+				values.count == values.compactMap(gatherDoubles).count
 			else { Log.error("CarouselLayout.Params.init(AnyJSONObject) expected an array of 0, 2 or 4 floats for locusControlPoints instead of: \(obj)") ; errors = true ; break getLocusControlPoints }
 			switch dd.count {
 				case 0:

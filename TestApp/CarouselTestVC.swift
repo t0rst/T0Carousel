@@ -129,12 +129,13 @@ extension CarouselTestVC : UICollectionViewDataSource {
 			bgv.layer.borderColor = UIColor.black.withAlphaComponent(0.05).cgColor
 		}
 
-		if nil == cell.selectedBackgroundView { cell.selectedBackgroundView = UIView() }
-		if let bgv = cell.selectedBackgroundView {
-			bgv.backgroundColor = .clear
-			bgv.layer.borderWidth = 8
-			bgv.layer.borderColor = UIColor.blue.withAlphaComponent(0.25).cgColor
-		}
+	//	if nil == cell.selectedBackgroundView { cell.selectedBackgroundView = UIView() }
+	//	if let bgv = cell.selectedBackgroundView {
+	//		bgv.backgroundColor = .clear
+	//		bgv.layer.borderWidth = 8
+	//	//	bgv.layer.borderColor = UIColor.blue.withAlphaComponent(0.25).cgColor
+	//		bgv.layer.borderColor = UIColor.black.withAlphaComponent(0.05).cgColor
+	//	}
 
 		return cell
 	}
@@ -161,7 +162,7 @@ class CarouselTestCell : UICollectionViewCell {
 	var id: String = "" {
 		didSet {
 			if id == oldValue { return }
-			foregroundView.subviews.flatMap({ $0 as? UILabel }).forEach { $0.text = id }
+			foregroundView.subviews.compactMap({ $0 as? UILabel }).forEach { $0.text = id }
 		}
 	}
 

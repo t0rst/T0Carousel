@@ -1,36 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="14113" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="ipad9_7" orientation="landscape">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
         <deployment identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
-        <capability name="Constraints with non-1.0 multipliers" minToolsVersion="5.1"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
-    <customFonts key="customFonts">
-        <array key="HelveticaNeueExtras.ttc">
-            <string>HelveticaNeue-CondensedBlack</string>
-        </array>
-    </customFonts>
     <scenes>
         <!--Carousel TestVC-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="CarouselTestVC" customModule="TestApp" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="CarouselTestVC" customModule="T0Carousel_TestApp" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <collectionView opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="8fd-8S-8Ht" userLabel="CV">
-                                <rect key="frame" x="321.5" y="20" width="682.5" height="728"/>
+                                <rect key="frame" x="0.0" y="20" width="1024" height="748"/>
                                 <collectionViewLayout key="collectionViewLayout" id="l8J-1k-hWl" customClass="CarouselLayout" customModule="T0Carousel"/>
                                 <cells>
-                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="carouselTestCell" id="MQr-5T-TKR" customClass="CarouselTestCell" customModule="TestApp" customModuleProvider="target">
-                                        <rect key="frame" x="153" y="0.0" width="377" height="383"/>
+                                    <collectionViewCell opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" reuseIdentifier="carouselTestCell" id="MQr-5T-TKR" customClass="CarouselTestCell" customModule="T0Carousel_TestApp" customModuleProvider="target">
+                                        <rect key="frame" x="0.0" y="0.0" width="377" height="383"/>
                                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                         <view key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" insetsLayoutMarginsFromSafeArea="NO">
                                             <rect key="frame" x="0.0" y="0.0" width="377" height="383"/>
@@ -136,10 +130,10 @@
                         </subviews>
                         <color key="backgroundColor" red="0.9600886703" green="0.94658340344380809" blue="0.87012017692370069" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
-                            <constraint firstItem="8fd-8S-8Ht" firstAttribute="top" secondItem="8bC-Xf-vdC" secondAttribute="top" constant="20" id="95v-qD-jP6"/>
-                            <constraint firstAttribute="bottom" secondItem="8fd-8S-8Ht" secondAttribute="bottom" constant="20" id="Yqu-zB-20S"/>
-                            <constraint firstItem="8fd-8S-8Ht" firstAttribute="width" secondItem="8bC-Xf-vdC" secondAttribute="width" multiplier="2:3" id="ZQo-Ui-9Zp"/>
-                            <constraint firstAttribute="trailing" secondItem="8fd-8S-8Ht" secondAttribute="trailing" constant="20" id="yFQ-ZQ-XJX"/>
+                            <constraint firstItem="vdA-18-QiC" firstAttribute="trailing" secondItem="8fd-8S-8Ht" secondAttribute="trailing" id="55W-oh-lfR"/>
+                            <constraint firstItem="8fd-8S-8Ht" firstAttribute="top" secondItem="vdA-18-QiC" secondAttribute="top" id="Dxw-9Y-xrc"/>
+                            <constraint firstItem="vdA-18-QiC" firstAttribute="bottom" secondItem="8fd-8S-8Ht" secondAttribute="bottom" id="dpg-LG-lac"/>
+                            <constraint firstItem="8fd-8S-8Ht" firstAttribute="leading" secondItem="vdA-18-QiC" secondAttribute="leading" id="wKN-fy-p9h"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="vdA-18-QiC"/>
                     </view>
