@@ -39,7 +39,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 	var window: UIWindow?
 	static var brandAt: URL? = nil
 
-	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
 		Brand.makeDefaultBrandOnce = { return DefaultBrand(storage: Bundle.main.bundleURL) }
 
 		let fm = FileManager.default

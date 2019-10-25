@@ -33,7 +33,6 @@ import UIKit
 #elseif os(macOS)
 import AppKit
 #endif
-import CwlUtils
 import T0Utils
 
 
@@ -113,9 +112,9 @@ public class CarouselLayout : UICollectionViewLayout
 			let posn = loopback.normalise(position: position, within: values.count)
 			var n = Int(trunc(posn))
 			var t = posn - CGFloat(n)
-			if fabs(1 - t) < 1e-10 {
+			if abs(1 - t) < 1e-10 {
 				t = 0 ; n += 1
-			} else if fabs(t) < 1e-10 {
+			} else if abs(t) < 1e-10 {
 				t = 0
 			}
 			var v = [CGFloat]()
@@ -253,7 +252,7 @@ public class CarouselLayout : UICollectionViewLayout
 	var transitionalOffset:		CGFloat = 0
 
 	// host
-	var collectionViewObserver:	KeyValueObserver? = nil
+	var collectionViewObserver:	NSKeyValueObservation? = nil
 	// debug
 	public var locusView:		LocusView? = nil
 
@@ -278,11 +277,10 @@ public class CarouselLayout : UICollectionViewLayout
 	func completeInit() {
 		tapRecogniser.addTarget(self, action: #selector(self.tapRecognised(by:)))
 		panRecogniser.addTarget(self, action: #selector(self.panRecognised(by:)))
-		collectionViewObserver = KeyValueObserver(source: self, keyPath: "collectionView", options: [.old,.new])
-			{ [weak self] (values: [NSKeyValueChangeKey: Any], reason: KeyValueObserver.CallbackReason) in
-				guard let this = self else { return }
-				let old = values[.oldKey] as? UICollectionView
-				let new = values[.newKey] as? UICollectionView
+		collectionViewObserver = observe(\.collectionView, options: [.old,.new])
+			{ this, values in
+				let old = values.oldValue as? UICollectionView
+				let new = values.newValue as? UICollectionView
 				this.collectionViewChanged(from: old, to: new)
 			}
 	}
@@ -763,7 +761,7 @@ extension CarouselLayout
 					-	this is rotated from the original path, such that the starting point we need is at the begining
 					-	it may seem that this rotation could have been achieved using the original path and setting a start time offset for the KFA, however this would not cope with the wrap around that is needed for at least one of the cells each time; the path rotation functions we use instead can cope with wrap around
 			*/
-			let kfaDuration = self.gh.selectDuration * Double(self.itemCount + 1) / fabs(Double(delta))
+			let kfaDuration = self.gh.selectDuration * Double(self.itemCount + 1) / abs(Double(delta))
 			let groupDuration = self.gh.selectDuration
 			let transitionalOffsetWas = self.transitionalOffset //+ 0.2
 			self.transitionalOffset = transitionalOffsetWas - delta //+ 0.5
@@ -804,7 +802,7 @@ extension CarouselLayout
 					let ga = CAAnimationGroup()
 					ga.animations = animations
 					ga.duration = groupDuration
-					ga.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseInEaseOut)
+					ga.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
 					cell.layer.removeAnimation(forKey: "position")
 					if self.gh.animateBounds {
 						cell.layer.removeAnimation(forKey: "bounds.size")
@@ -849,7 +847,7 @@ extension CarouselLayout
 // MARK: -
 public extension CarouselLayout.Params
 {
-	public init?(_ params: AnyJSONObject)
+	init?(_ params: AnyJSONObject)
 	{
 		guard case .dictionary(let values) = params
 		else { Log.error("CarouselLayout.Params.init(AnyJSONObject) expected a dictionary at root level instead of: \(params)") ; return nil }

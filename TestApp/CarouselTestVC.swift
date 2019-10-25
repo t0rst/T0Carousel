@@ -27,8 +27,8 @@
 	SOFTWARE.
 */
 
+import Foundation
 import UIKit
-import CwlUtils
 import BrandKit
 import T0Carousel
 
@@ -77,14 +77,14 @@ class CarouselTestVC : UIViewController {
 			}
 		}
 	}
-	private var _brandObserver:	KeyValueObserver? = nil
-	private var _brandObserved: Brand? = nil
+	private var _brandObserver:	NSKeyValueObservation? = nil
+	@objc private var _brandObserved: Brand? = nil
 	private func observeBrand() {
 		guard let brand = self.brand, _brandObserved !== brand else { return }
 		_brandObserved = brand
-		_brandObserver = KeyValueObserver(source: brand, keyPath: "sequence", options: [.initial,.new])
-			{ [weak self] (values, reason) in
-				self?.applyBrand()
+		_brandObserver = self.observe(\._brandObserved?.sequence, options: [.initial,.new])
+			{ this, _ in
+				this.applyBrand()
 			}
 	}
 	func applyBrand() {
